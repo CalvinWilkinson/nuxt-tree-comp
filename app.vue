@@ -44,6 +44,7 @@ const onNodeExpand = (node: TreeNode) => {
             }
 
             if (nodes.value) {
+                // Add the newly created node and it's children to the exiting list of parent nodes and set loading to false
                 nodes.value[parseInt(node.key, 10)] = { ..._node, loading: false };
             }
         }, 500);
