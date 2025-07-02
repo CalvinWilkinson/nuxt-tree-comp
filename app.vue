@@ -3,7 +3,7 @@
     <div class="card flex flex-wrap gap-4">
         <div class="flex-auto md:flex md:justify-start md:items-center flex-col">
             <label class="font-bold block mb-2">Icon Mode</label>
-            <Tree :value="nodes2" @node-expand="onNodeExpand2" loadingMode="icon" class="w-full md:w-[30rem]"></Tree>
+            <Tree :value="nodes" @node-expand="onNodeExpand" loadingMode="icon" class="w-full md:w-[30rem]" />
         </div>
     </div>
 </template>
@@ -12,25 +12,25 @@
 import type { TreeNode } from 'primevue/treenode';
 import { ref, onMounted } from 'vue';
 
-// const nodes = ref(null);
-const nodes2 = ref<TreeNode[] | undefined>(undefined);
-const loading = ref(false);
+const nodes = ref<TreeNode[] | undefined>(undefined);
+const isLoading = ref(false);
 
 onMounted(() => {
-    loading.value = true;
-    nodes2.value = initiateNodes2();
+    isLoading.value = true;
+    nodes.value = initiateNodes();
 
+    // Simulate time to load the data
     setTimeout(() => {
-        // nodes.value = initiateNodes();
-        loading.value = false;
-        nodes2.value?.map((node) => (node.loading = false));
+        isLoading.value = false;
+        nodes.value?.map((node) => (node.loading = false));
     }, 2000);
 });
 
-const onNodeExpand2 = (node: TreeNode) => {
+const onNodeExpand = (node: TreeNode) => {
     if (!node.children) {
         node.loading = true;
 
+        // Simulate time to load the child notes
         setTimeout(() => {
             let _node = { ...node };
 
@@ -43,20 +43,21 @@ const onNodeExpand2 = (node: TreeNode) => {
                 });
             }
 
-            if (nodes2.value) {
-                nodes2.value[parseInt(node.key, 10)] = { ..._node, loading: false };
+            if (nodes.value) {
+                nodes.value[parseInt(node.key, 10)] = { ..._node, loading: false };
             }
         }, 500);
     }
 };
 
-const initiateNodes2 = (): TreeNode[] => {
+const initiateNodes = (): TreeNode[] => {
     return [
         {
             key: '0',
             label: 'Node 0',
             leaf: false,
-            loading: true
+            loading: true,
+            icon: "pi pi-folder"
         },
         {
             key: '1',
