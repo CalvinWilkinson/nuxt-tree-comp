@@ -3,6 +3,7 @@
     <div class="card flex flex-wrap gap-4">
         <div class="flex-auto md:flex md:justify-start md:items-center flex-col">
             <label class="font-bold block mb-2">Icon Mode</label>
+            <i class="pi pi-folder"></i>
             <Tree :value="nodes" @node-expand="onNodeExpand" loadingMode="icon" class="w-full md:w-[30rem]" />
         </div>
     </div>
@@ -58,7 +59,7 @@ const initiateNodes = (): TreeNode[] => {
             label: 'Node 0',
             leaf: false,
             loading: true,
-            icon: "pi pi-folder"
+            icon: 'pi pi-folder'
         },
         {
             key: '1',

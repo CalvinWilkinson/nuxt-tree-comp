@@ -2,6 +2,8 @@
     "editor.rename.enablePreview": false,
     "cSpell.words": [
         "Nuxt",
+        "nuxtjs",
+        "primeicons",
         "primeuix",
         "primevue",
         "treenode"
