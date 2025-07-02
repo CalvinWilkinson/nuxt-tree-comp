@@ -3,15 +3,14 @@
     <div class="card flex flex-wrap gap-4">
         <div class="flex-auto md:flex md:justify-start md:items-center flex-col">
             <label class="font-bold block mb-2">Icon Mode</label>
-            <i class="pi pi-folder"></i>
             <Tree :value="nodes" @node-expand="onNodeExpand" loadingMode="icon" class="w-full md:w-[30rem]" />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import type { TreeNode } from 'primevue/treenode';
-import { ref, onMounted } from 'vue';
+import type { TreeNode } from "primevue/treenode";
+import { ref, onMounted } from "vue";
 
 const nodes = ref<TreeNode[] | undefined>(undefined);
 const isLoading = ref(false);
@@ -39,8 +38,8 @@ const onNodeExpand = (node: TreeNode) => {
 
             for (let i = 0; i < 3; i++) {
                 _node.children.push({
-                    key: node.key + '-' + i,
-                    label: 'Lazy ' + node.label + '-' + i
+                    key: node.key + "-" + i,
+                    label: "Lazy " + node.label + "-" + i
                 });
             }
 
@@ -55,23 +54,25 @@ const onNodeExpand = (node: TreeNode) => {
 const initiateNodes = (): TreeNode[] => {
     return [
         {
-            key: '0',
-            label: 'Node 0',
+            key: "0",
+            label: "Node 0",
             leaf: false,
             loading: true,
-            icon: 'pi pi-folder'
+            icon: "pi pi-folder"
         },
         {
-            key: '1',
-            label: 'Node 1',
+            key: "1",
+            label: "Node 1",
             leaf: false,
-            loading: true
+            loading: true,
+            icon: "pi pi-folder"
         },
         {
-            key: '2',
-            label: 'Node 2',
+            key: "2",
+            label: "Node 2",
             leaf: false,
-            loading: true
+            loading: true,
+            icon: "pi pi-folder"
         }
     ];
 };
