@@ -43,11 +43,9 @@ const onNodeExpand2 = (node: TreeNode) => {
                 });
             }
 
-            let _nodes = { ...nodes2.value };
-
-            _nodes[parseInt(node.key, 10)] = { ..._node, loading: false };
-
-            nodes2.value = _nodes;
+            if (nodes2.value) {
+                nodes2.value[parseInt(node.key, 10)] = { ..._node, loading: false };
+            }
         }, 500);
     }
 };
