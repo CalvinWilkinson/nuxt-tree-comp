@@ -1,0 +1,56 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        { // PLAYGROUND
+            "request": "launch",
+            "name": "Playground",
+            "type": "node",
+            "program": "${workspaceFolder}/dev-scripts/playground.ts",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "SUPABASE_URL": "${env:KD_SUPABASE_URL_LOCAL}",
+                "SUPABASE_ANON_KEY": "${env:KD_SUPABASE_ANON_KEY_LOCAL}",
+                "SUPABASE_SERVICE_ROLE_ANON_KEY": "${env:KD_SUPABASE_SERVICE_ROLE_KEY_LOCAL}",
+            },
+            "windows": {
+                "runtimeExecutable": "${userHome}/.deno/bin/deno.exe",
+            },
+            "linux": {
+                "runtimeExecutable": "${userHome}/.deno/bin/deno"
+            },
+            "osx": {
+                "runtimeExecutable": "${userHome}/.deno/bin/deno"
+            },
+            "runtimeArgs": [
+                "run",
+                "--allow-all",
+                "--inspect-wait",
+            ],
+            "attachSimplePort": 9229
+        },
+        { // DEBUG CLIENT
+            "type": "chrome",
+            "request": "launch",
+            "name": "Debug Client",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}"
+        },
+        { // DEBUG SERVER
+            "name": "Debug Server",
+            "type": "node",
+            "request": "launch",
+            "outputCapture": "std",
+            "env": {
+                "SUPABASE_URL": "${env:KD_SUPABASE_URL_LOCAL}",
+                "SUPABASE_ANON_KEY": "${env:KD_SUPABASE_ANON_KEY_LOCAL}",
+            },
+            "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
+            "args": [
+                "dev"
+            ],
+        }
+    ]
+}
