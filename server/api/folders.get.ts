@@ -39,7 +39,6 @@ export default defineEventHandler(async (event): Promise<FolderItem[]> => {
     try {
         const query = getQuery(event);
         const folderPath = query.folderPath as string;
-        console.log(`Folder Path(folders): ${folderPath}`);
 
         const client = createClient(_supabaseUrl, _anonKey);
         const { data: list, error: listError } = await client.storage.from(bucketName).list(folderPath);
@@ -51,19 +50,11 @@ export default defineEventHandler(async (event): Promise<FolderItem[]> => {
             });
         }
 
-        list?.forEach(item => {
-            console.log(`List Item: ${item.name}`);
-        });
-
         if (list.length === 0) {
             return [];
         }
 
         const folders = list.filter((i) => i.metadata === null);
-
-        folders?.forEach(folder => {
-            console.log(`Folder: ${folder.name}`);
-        });
 
         const result: FolderItem[] = [];
 
@@ -75,7 +66,7 @@ export default defineEventHandler(async (event): Promise<FolderItem[]> => {
 
             result.push({
                 name: folder.name,
-                parentPath: folderPath,
+                path: currentPath,
                 hasChildren: hasContent,
             });
         }

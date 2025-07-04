@@ -1,17 +1,17 @@
 import { FileObject } from "@supabase/storage-js";
 import { createClient } from "@supabase/supabase-js";
 import process from "process";
+import { FileItem } from "~/core/data/file-item";
 
 const bucketName = "images";
 
-export default defineEventHandler(async (event): Promise<FileObject[]> => {
+export default defineEventHandler(async (event): Promise<FileItem[]> => {
     const _supabaseUrl = process.env.SUPABASE_URL ?? "";
     const _anonKey = process.env.SUPABASE_ANON_KEY ?? "";
 
     try {
         const query = getQuery(event);
         const folderPath = query.folderPath as string;
-        console.log(`Folder Path(files): ${folderPath}`);
 
         const client = createClient(_supabaseUrl, _anonKey);
         const { data: list, error: listError } = await client.storage.from(bucketName).list(folderPath);
@@ -32,9 +32,20 @@ export default defineEventHandler(async (event): Promise<FileObject[]> => {
 
         const files = list.filter((i) => i.metadata !== null && i.name !== ".emptyFolderPlaceholder");
 
-        files?.forEach(file => {
-            console.log(`File: ${file.name}`);
-        });
+        const result: FileItem[] = [];
+
+        for (const file of files) {
+            const filePath = folderPath === undefined ? file.name : `${folderPath}/${file.name}`;
+
+            const { data: urlData } = client.storage.from(bucketName).getPublicUrl(filePath);
+
+            result.push({
+                uniqueId: crypto.randomUUID(),
+                name: file.name,
+                path: filePath,
+                url: urlData.publicUrl
+            });
+        }
 
         // Set appropriate content type based on file extension
         const contentType = "application/json";
@@ -45,7 +56,7 @@ export default defineEventHandler(async (event): Promise<FileObject[]> => {
         setHeader(event, "Pragma", "no-cache");
         setHeader(event, "Expires", "0");
 
-        return files;
+        return result;
     } catch (error) {
         throw createError({
             statusCode: 500,

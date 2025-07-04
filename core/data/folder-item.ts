@@ -1,7 +1,7 @@
 export interface FolderItem {
     name: string;
 
-    parentPath: string;
+    path: string;
 
     hasChildren: boolean;
 }
