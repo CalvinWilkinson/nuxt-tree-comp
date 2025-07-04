@@ -21,7 +21,7 @@ let nodes = ref<TreeNode[]>([]);
 
 nodes.value = folderData.value.map((item, index) => {
     return {
-        key: crypto.randomUUID(),
+        key: item.name, // Use the folder name as the key (root level path)
         label: item.name,
         leaf: !item.hasChildren,
         loading: isLoading.value,
@@ -61,7 +61,7 @@ const onNodeExpand = async (node: TreeNode) => {
 
         node.loading = true;
 
-        const foldersUrl = `/api/folders?folderPath=${node.label}`;
+        const foldersUrl = `/api/folders?folderPath=${node.key}`;
 
         const folders = await $fetch<FolderItem[]>(foldersUrl, {
             method: "GET",
@@ -72,7 +72,7 @@ const onNodeExpand = async (node: TreeNode) => {
             },
         });
 
-        const filesUrl = `/api/files?folderPath=${node.label}`;
+        const filesUrl = `/api/files?folderPath=${node.key}`;
 
         const files = await $fetch<FolderItem[]>(filesUrl, {
             method: "GET",
@@ -84,8 +84,8 @@ const onNodeExpand = async (node: TreeNode) => {
         });
 
         // Add the folders as children of the node
-        _node.children = folders.map((folder, index) => ({
-            key: index.toString(),
+        node.children = folders.map((folder, index) => ({
+            key: `${node.key}/${folder.name}`, // Use full path as key
             label: folder.name,
             leaf: !folder.hasChildren,
             loading: false,
@@ -93,20 +93,15 @@ const onNodeExpand = async (node: TreeNode) => {
         }));
 
         // Add the files as children of the node
-        const fileNodes = files.map((file, index) => ({
-            key: index.toString(),
+        node.children = [...node.children, ...files.map((file, index) => ({
+            key: `${node.key}/${file.name}`, // Use full path as key
             label: file.name,
             leaf: true,
             loading: false,
-            icon: "pi pi-file"
-        }));
+            icon: "pi pi-file",
+        }))];
 
-        _node.children.push(...fileNodes);
-
-        const key = nodes.value.findIndex((n) => n.key === node.key);
-        nodes.value[key] = { ..._node, loading: false };
-
-        console.log(nodes);
+        node.loading = false;
     }
 };
 
@@ -115,7 +110,7 @@ const handleClick = async () => {
     // Reset nodes to trigger re-render
     nodes.value = folderData.value.map((item, index) => {
         return {
-            key: index.toString(),
+            key: item.name, // Use the folder name as the key (root level path)
             label: item.name,
             leaf: !item.hasChildren,
             loading: isLoading.value,

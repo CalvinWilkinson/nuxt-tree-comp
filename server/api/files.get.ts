@@ -11,6 +11,7 @@ export default defineEventHandler(async (event): Promise<FileObject[]> => {
     try {
         const query = getQuery(event);
         const folderPath = query.folderPath as string;
+        console.log(`Folder Path(files): ${folderPath}`);
 
         const client = createClient(_supabaseUrl, _anonKey);
         const { data: list, error: listError } = await client.storage.from(bucketName).list(folderPath);
@@ -29,7 +30,11 @@ export default defineEventHandler(async (event): Promise<FileObject[]> => {
             });
         }
 
-        const files = list.filter((i) => i.metadata !== null);
+        const files = list.filter((i) => i.metadata !== null && i.name !== ".emptyFolderPlaceholder");
+
+        files?.forEach(file => {
+            console.log(`File: ${file.name}`);
+        });
 
         // Set appropriate content type based on file extension
         const contentType = "application/json";
