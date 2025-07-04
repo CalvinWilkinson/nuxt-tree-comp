@@ -11,16 +11,9 @@ export default defineEventHandler(async (event): Promise<FileObject[]> => {
     try {
         const query = getQuery(event);
         const folderPath = query.folderPath as string;
-        console.log(`Folder Path: ${folderPath}`);
 
         const client = createClient(_supabaseUrl, _anonKey);
         const { data: list, error: listError } = await client.storage.from(bucketName).list(folderPath);
-
-        console.log("LIST OF FILES:");
-        console.log(list);
-        list?.forEach((item) => {
-            console.log(item.name);
-        });
 
         if (listError) {
             throw createError({

@@ -9,9 +9,6 @@ const bucketName = "images";
 async function hasAnyContent(client: any, folderPath: string): Promise<boolean> {
     const { data: items, error } = await client.storage.from(bucketName).list(folderPath);
 
-    console.log("LIST OF ITEMS:");
-    console.log(items);
-
     if (error || !items || items.length === 0) {
         return false;
     }
@@ -46,8 +43,6 @@ export default defineEventHandler(async (event): Promise<FolderItem[]> => {
         const client = createClient(_supabaseUrl, _anonKey);
         const { data: list, error: listError } = await client.storage.from(bucketName).list(folderPath);
 
-        console.log("LIST OF INITIAL FILES:");
-        console.log(list);
         if (listError) {
             throw createError({
                 statusCode: 500,
