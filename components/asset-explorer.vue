@@ -9,35 +9,19 @@ import type { SupaItem } from "~/core/data/models/supabase/supa-item";
 // const nodes = ref<TreeNode[] | undefined>(undefined);
 const isLoading = ref(false);
 
-// Use useLazyFetch to fetch data on server side and hydrate on client
-
-// if (import.meta.server) {
-//     console.log("Server Side");
-// } else {
-//     console.log("Client Side");
-// }
-
-
-// const { data: folderData, pending: isLoading } = await useLazyFetch<FolderItem[]>("/api/folders", {
-//     key: "folders-list",
-//     server: true
-// });
-// const folders = await useFolders();
-
 // Direct useLazyFetch call with unique key
-const { data: folderData, pending } = await useLazyFetch<FolderItem[]>("/api/folders", {
-    key: 'folders-direct-call',
+const { data: folderData, pending, refresh } = await useLazyFetch<FolderItem[]>("/api/folders", {
     server: true,
+    cache: "no-cache",
     default: () => []
 });
 
 // Computed property to transform data into TreeNode format
-
 let nodes = ref<TreeNode[]>([]);
 
-nodes.value = folderData.value.map((item) => {
+nodes.value = folderData.value.map((item, index) => {
     return {
-        key: item.name,
+        key: index.toString(),
         label: item.name,
         leaf: !item.hasChildren,
         loading: isLoading.value,
@@ -45,80 +29,70 @@ nodes.value = folderData.value.map((item) => {
     };
 });
 
-// const nodes = computed<TreeNode[]>(() => {
-//     if (!folderData.value) return [];
-
-//     return folderData.value.map((item) => {
-//         return {
-//             key: item.name,
-//             label: item.name,
-//             leaf: !item.hasChildren,
-//             loading: isLoading.value,
-//             icon: "pi pi-folder"
-//         };
-//     });
-// });
-
-// const initiateNodes = async (): Promise<TreeNode[]> => {
-//     console.log("Initiating nodes...");
-//     isLoading.value = true;
-//     const { data, error} = await useFetch<FolderItem[]>("/api/folders");
-
-//     isLoading.value = false;
-
-//     if (error.value) {
-//         console.error("Error fetching folders:", error.value);
-//         return [];
-//     }
-
-//     if (data.value === null) {
-//         return [];
-//     }
-
-//     return data.value.map((item) => {
-//         return {
-//             key: item.name,
-//             label: item.name,
-//             leaf: !item.hasChildren,
-//             loading: isLoading.value,
-//             icon: "pi pi-folder"
-//         };
-//     });
-// };
-
-const onNodeExpand = (node: TreeNode) => {
+const onNodeExpand = async (node: TreeNode) => {
     if (!node.children) {
+        let _node = { ...node };
+
         node.loading = true;
 
-        // Simulate time to load the child notes
-        setTimeout(() => {
-            node.loading = false;
-            let _node = { ...node };
+        const foldersUrl = `/api/folders?folderPath=${node.label}`;
 
-            _node.children = [];
+        const folders = await $fetch<FolderItem[]>(foldersUrl, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache"
+            },
+        });
+        
+        const filesUrl = `/api/files?folderPath=${node.label}`;
 
-            for (let i = 0; i < 3; i++) {
-                _node.children.push({
-                    key: node.key + "-" + i,
-                    label: "Lazy " + node.label + "-" + i,
-                    leaf: true
-                });
-            }
+        const files = await $fetch<FolderItem[]>(filesUrl, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache"
+            },
+        });
 
-            // Find the node in the array by key and update it
-            const nodeIndex = nodes.value.findIndex(n => n.key === node.key);
-            if (nodeIndex !== -1) {
-                nodes.value[nodeIndex] = { ..._node, loading: false };
-            }
-        }, 500);
+        // Add the folders as children of the node
+        _node.children = folders.map((folder, index) => ({
+            key: index.toString(),
+            label: folder.name,
+            leaf: !folder.hasChildren,
+            loading: false,
+            icon: "pi pi-folder"
+        }));
+
+        // Add the files as children of the node
+        const fileNodes = files.map((file, index) => ({
+            key: index.toString(),
+            label: file.name,
+            leaf: true,
+            loading: false,
+            icon: "pi pi-file"
+        }));
+
+        _node.children.push(...fileNodes);
+
+        const index = parseInt(_node.key, 10);
+        nodes.value[index] = { ..._node, loading: false };
     }
 };
 
-const handleClick = () => {
-    console.log("bUTTON clicked");
-    nodes.value.forEach(node => {
-        console.log("Toggling node");
-        node.loading = !node.loading;
+const handleClick = async () => {
+    await refresh();
+    // Reset nodes to trigger re-render
+    nodes.value = folderData.value.map((item, index) => {
+        return {
+            key: index.toString(),
+            label: item.name,
+            leaf: !item.hasChildren,
+            loading: isLoading.value,
+            icon: "pi pi-folder"
+        };
     });
 };
 
@@ -131,7 +105,7 @@ const handleClick = () => {
             <label class="font-bold block mb-2">Icon Mode</label>
             <Tree :value="nodes" @node-expand="onNodeExpand" loadingMode="icon" class="w-full md:w-[30rem]" />
 
-            <Button label="toggle" @click="handleClick" />
+            <Button label="Refresh" @click="handleClick" />
         </div>
     </div>
 </template>

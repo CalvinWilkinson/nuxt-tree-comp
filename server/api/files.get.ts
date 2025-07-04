@@ -11,9 +11,16 @@ export default defineEventHandler(async (event): Promise<FileObject[]> => {
     try {
         const query = getQuery(event);
         const folderPath = query.folderPath as string;
+        console.log(`Folder Path: ${folderPath}`);
 
         const client = createClient(_supabaseUrl, _anonKey);
         const { data: list, error: listError } = await client.storage.from(bucketName).list(folderPath);
+
+        console.log("LIST OF FILES:");
+        console.log(list);
+        list?.forEach((item) => {
+            console.log(item.name);
+        });
 
         if (listError) {
             throw createError({
@@ -36,7 +43,9 @@ export default defineEventHandler(async (event): Promise<FileObject[]> => {
 
         // Set headers
         setHeader(event, "Content-Type", contentType);
-        setHeader(event, "Cache-Control", "public, max-age=3600"); // Optional caching
+        setHeader(event, "Cache-Control", "no-cache, no-store, must-revalidate");
+        setHeader(event, "Pragma", "no-cache");
+        setHeader(event, "Expires", "0");
 
         return files;
     } catch (error) {

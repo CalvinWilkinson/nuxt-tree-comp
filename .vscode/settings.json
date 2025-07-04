@@ -1,4 +1,7 @@
 {
+    "deno.enablePaths": [
+        "./dev-scripts/"
+    ],
     "editor.rename.enablePreview": false,
     "cSpell.words": [
         "Nuxt",

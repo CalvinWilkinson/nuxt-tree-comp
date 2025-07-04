@@ -2,9 +2,38 @@ import type { FileObject, FileObjectV2 } from "@supabase/storage-js";
 import { createClient } from "@supabase/supabase-js";
 import process from "process";
 import { FolderItem } from "~/core/data/folder-item";
-import { sleep } from "~/core/utils/sleep";
 
 const bucketName = "images";
+
+// Recursive function to check if a folder has any content (files or folders with content) at any depth
+async function hasAnyContent(client: any, folderPath: string): Promise<boolean> {
+    const { data: items, error } = await client.storage.from(bucketName).list(folderPath);
+
+    console.log("LIST OF ITEMS:");
+    console.log(items);
+
+    if (error || !items || items.length === 0) {
+        return false;
+    }
+
+    // Check if there are any files (items with metadata)
+    const files = items.filter((item: FileObject) => item.metadata !== null && item.name !== ".emptyFolderPlaceholder");
+    if (files.length > 0) {
+        return true;
+    }
+
+    // Check subfolders recursively
+    const folders = items.filter((item: FileObject) => item.metadata === null);
+    for (const folder of folders) {
+        const subFolderPath = `${folderPath}/${folder.name}`;
+        const hasContent = await hasAnyContent(client, subFolderPath);
+        if (hasContent) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 export default defineEventHandler(async (event): Promise<FolderItem[]> => {
     const _supabaseUrl = process.env.SUPABASE_URL ?? "";
@@ -12,11 +41,13 @@ export default defineEventHandler(async (event): Promise<FolderItem[]> => {
 
     try {
         const query = getQuery(event);
-        const folderPath = query.path as string;
+        const folderPath = query.folderPath as string;
 
         const client = createClient(_supabaseUrl, _anonKey);
         const { data: list, error: listError } = await client.storage.from(bucketName).list(folderPath);
 
+        console.log("LIST OF INITIAL FILES:");
+        console.log(list);
         if (listError) {
             throw createError({
                 statusCode: 500,
@@ -35,19 +66,13 @@ export default defineEventHandler(async (event): Promise<FolderItem[]> => {
         for (const folder of folders) {
             const currentPath = folderPath === undefined ? folder.name : `${folderPath}/${folder.name}`;
 
-            const { data: childrenItems, error: childrenItemsError } = await client.storage.from(bucketName).list(currentPath);
-
-            if (childrenItemsError) {
-                throw createError({
-                    statusCode: 500,
-                    statusMessage: "Failed to get the list of children items."
-                });
-            }
+            // Use the recursive function to check for any content at any depth
+            const hasContent = await hasAnyContent(client, currentPath);
 
             result.push({
                 name: folder.name,
                 parentPath: folderPath,
-                hasChildren: childrenItems && childrenItems.length > 0,
+                hasChildren: hasContent,
             });
         }
 
@@ -56,7 +81,9 @@ export default defineEventHandler(async (event): Promise<FolderItem[]> => {
 
         // Set headers
         setHeader(event, "Content-Type", contentType);
-        setHeader(event, "Cache-Control", "public, max-age=3600"); // Optional caching
+        setHeader(event, "Cache-Control", "no-cache, no-store, must-revalidate");
+        setHeader(event, "Pragma", "no-cache");
+        setHeader(event, "Expires", "0");
 
         return result;
     } catch (error) {
