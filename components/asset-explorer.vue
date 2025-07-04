@@ -21,13 +21,39 @@ let nodes = ref<TreeNode[]>([]);
 
 nodes.value = folderData.value.map((item, index) => {
     return {
-        key: index.toString(),
+        key: crypto.randomUUID(),
         label: item.name,
         leaf: !item.hasChildren,
         loading: isLoading.value,
         icon: "pi pi-folder"
     };
 });
+
+const findParentNode = (targetNode: TreeNode, currentNodes: TreeNode[], parent: TreeNode | null = null): TreeNode | null => {
+    for (const node of currentNodes) {
+        if (node.key === targetNode.key) {
+            return parent;
+        }
+
+        if (node.children) {
+            const foundParent = findParentNode(targetNode, node.children, node);
+
+            if (foundParent) {
+                return foundParent;
+            }
+        }
+    }
+
+    return null;
+};
+
+const onNodeSelect = (node: TreeNode) => {
+    if (parent) {
+        console.log("Parent node:", parent.label);
+    } else {
+        console.log("This is a root node");
+    }
+};
 
 const onNodeExpand = async (node: TreeNode) => {
     if (!node.children) {
@@ -45,7 +71,7 @@ const onNodeExpand = async (node: TreeNode) => {
                 "Pragma": "no-cache"
             },
         });
-        
+
         const filesUrl = `/api/files?folderPath=${node.label}`;
 
         const files = await $fetch<FolderItem[]>(filesUrl, {
@@ -63,7 +89,7 @@ const onNodeExpand = async (node: TreeNode) => {
             label: folder.name,
             leaf: !folder.hasChildren,
             loading: false,
-            icon: "pi pi-folder"
+            icon: "pi pi-folder",
         }));
 
         // Add the files as children of the node
@@ -77,8 +103,10 @@ const onNodeExpand = async (node: TreeNode) => {
 
         _node.children.push(...fileNodes);
 
-        const index = parseInt(_node.key, 10);
-        nodes.value[index] = { ..._node, loading: false };
+        const key = nodes.value.findIndex((n) => n.key === node.key);
+        nodes.value[key] = { ..._node, loading: false };
+
+        console.log(nodes);
     }
 };
 
@@ -103,7 +131,8 @@ const handleClick = async () => {
     <div class="card flex flex-wrap gap-4">
         <div class="flex-auto md:flex md:justify-start md:items-center flex-col">
             <label class="font-bold block mb-2">Icon Mode</label>
-            <Tree :value="nodes" @node-expand="onNodeExpand" loadingMode="icon" class="w-full md:w-[30rem]" />
+            <Tree :value="nodes" loadingMode="icon" class="w-full md:w-[30rem]" selection-mode="single"
+                @node-expand="onNodeExpand" @node-select="onNodeSelect" />
 
             <Button label="Refresh" @click="handleClick" />
         </div>
