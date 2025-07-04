@@ -7,7 +7,7 @@ const anonKey = (Deno.env.get("SUPABASE_ANON_KEY") ?? "").trim();
 const serviceRoleKey = (Deno.env.get("SUPABASE_SERVICE_ROLE_ANON_KEY") ?? "").trim();
 
 const bucketName = "images";
-const folderPath = "my-folder";
+const folderPath = "";
 
 const client = createClient(supabaseUrl, serviceRoleKey);
 

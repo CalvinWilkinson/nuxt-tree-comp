@@ -57,8 +57,6 @@ const onNodeSelect = (node: TreeNode) => {
 
 const onNodeExpand = async (node: TreeNode) => {
     if (!node.children) {
-        let _node = { ...node };
-
         node.loading = true;
 
         const foldersUrl = `/api/folders?folderPath=${node.key}`;

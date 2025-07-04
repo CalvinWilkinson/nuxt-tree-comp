@@ -51,6 +51,10 @@ export default defineEventHandler(async (event): Promise<FolderItem[]> => {
             });
         }
 
+        list?.forEach(item => {
+            console.log(`List Item: ${item.name}`);
+        });
+
         if (list.length === 0) {
             return [];
         }
