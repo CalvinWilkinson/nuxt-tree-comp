@@ -7,19 +7,18 @@ const anonKey = (Deno.env.get("SUPABASE_ANON_KEY") ?? "").trim();
 const serviceRoleKey = (Deno.env.get("SUPABASE_SERVICE_ROLE_ANON_KEY") ?? "").trim();
 
 const bucketName = "images";
-const folderPath = "";
+const oldFolderPath = "FolderB/green-diamond.png";
+const newFolderPath = "FolderB/kinson.png";
 
 const client = createClient(supabaseUrl, serviceRoleKey);
 
-const { data: items, error } = await client.storage.from(bucketName).list(folderPath);
+const { data, error } = await client.storage.from(bucketName).move(oldFolderPath, newFolderPath);
 
 if (error) {
     console.error("Error fetching items:", error);
     Deno.exit(1);
 }
 
-items.forEach(item => {
-    console.log(item.name);
-});
+console.log(data);
 
 debugger;

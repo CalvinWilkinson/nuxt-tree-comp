@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RenameDialog } from "#components";
 import { node } from "@primeuix/themes/aura/organizationchart";
 import type { FileObject, FileObjectV2 } from "@supabase/storage-js";
 import type { TreeNode } from "primevue/treenode";
@@ -70,7 +71,7 @@ nodes.value = folderData.value.map((item, index) => {
 
 const onNodeSelect = (node: TreeNode) => {
     const selectedItem = getFolderOrFileItem(node);
-    
+
     props.onNodeSelected?.(selectedItem);
 };
 
@@ -79,7 +80,7 @@ const onNodeExpand = async (node: TreeNode) => {
         node.loading = true;
 
         const folderOrFileItem = getFolderOrFileItem(node);
-        
+
         const foldersUrl = `/api/folders?folderPath=${folderOrFileItem.path}`;
 
         const folders = await $fetch<FolderItem[]>(foldersUrl, {
@@ -141,7 +142,8 @@ const handleRefresh = async () => {
             <Tree :value="nodes" loadingMode="icon" class="w-full md:w-[30rem]" selection-mode="single"
                 @node-expand="onNodeExpand" @node-select="onNodeSelect">
                 <template #default="slotProps">
-                    <FolderFileMenu :label="slotProps.node.label ?? 'no-label-set'" :item="getFolderOrFileItem(slotProps.node)"/>
+                    <FolderFileMenu :label="slotProps.node.label ?? 'no-label-set'"
+                        :item="getFolderOrFileItem(slotProps.node)" />
 
                     <!-- <div>
                         <label class="ml-1">{{ slotProps.node.label }}</label>

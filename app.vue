@@ -6,29 +6,39 @@ import type { FolderItem } from "./core/data/folder-item";
 import { isFileItem, isFolderItem } from "./core/utils/type-guards";
 import type { MenuItem } from "primevue/menuitem";
 
+import { ref } from "vue";
+import type { RenameDialog } from "#components";
+
 const currentImgPath = ref<string>("");
+const dialogRef = ref<InstanceType<typeof RenameDialog> | null>(null);
 
 // Define the callback function
 const handleNodeSelected = (selectedItem: FolderItem | FileItem) => {
     if (isFileItem(selectedItem)) {
+        console.log(selectedItem.url);
         currentImgPath.value = selectedItem.url;
     }
 };
 
-const handleOnRename = (item: MenuItem) => {
-    console.log("On Rename Clicked:", item.label);
-};
-
-const handleOnDelete = (item: MenuItem) => {
-    console.log("On Delete Clicked:", item.label);
-};
+const handleDialogOpen = () => {
+    if (dialogRef.value) {
+        dialogRef.value.open();
+    }
+}
 
 </script>
 
+
+
 <template>
+    <Toast />
+    <ConfirmDialog></ConfirmDialog>
+
     <div class="flex flex-col justify-center items-center">
         <AssetExplorer :on-node-selected="handleNodeSelected" />
 
         <Image :src="currentImgPath" />
+
+        <Button label="Show" @click="handleDialogOpen" />
     </div>
 </template>

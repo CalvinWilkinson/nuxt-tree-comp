@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import Menu from "primevue/menu";
+import type { RenameDialog } from "#components";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { FolderItem } from "~/core/data/folder-item";
 import type { FileItem } from "~/core/data/file-item";
@@ -9,13 +10,10 @@ interface Props {
     label: string,
 
     item: FolderItem | FileItem,
-
-    onRename?: (menuItem: MenuItem) => void;
-    
-    onDelete?: (menuItem: MenuItem) => void;
 }
 
 const props = defineProps<Props>();
+const renameDialogRef = ref<InstanceType<typeof RenameDialog> | null>(null);
 
 const menu = ref<InstanceType<typeof Menu>>();
 const items = ref<MenuItem[]>([
@@ -25,15 +23,22 @@ const items = ref<MenuItem[]>([
             {
                 label: "Rename",
                 icon: "pi pi-pen-to-square",
-                command: (event: MenuItemCommandEvent) => {
-                    props.onRename?.(event.item);
+                command: async (event: MenuItemCommandEvent) => {
+                    if (renameDialogRef.value) {
+                        renameDialogRef.value.open();
+                    }
                 }
             },
             {
                 label: "Delete",
                 icon: "pi pi-trash",
-                command: (event: MenuItemCommandEvent) => {
-                    props.onDelete?.(event.item);
+                command: async (event: MenuItemCommandEvent) => {
+                    const queryParams = `?filePath=${props.item.path}`;
+
+                    const url = `/api/file${queryParams}`;
+                    await $fetch(url, {
+                        method: "DELETE",
+                    });
                 }
             },
         ]
@@ -57,4 +62,6 @@ const toggle = (event: MouseEvent) => {
             @click="toggle" />
         <Menu ref="menu" id="overlay_menu" :model="items" :popup="true" />
     </div>
+
+    <RenameDialog ref="renameDialogRef" :file="props.item" />
 </template>
