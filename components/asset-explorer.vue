@@ -29,27 +29,31 @@ const { data: folderData, pending, refresh } = await useLazyFetch<FolderItem[]>(
 // Computed property to transform data into TreeNode format
 let nodes = ref<TreeNode[]>([]);
 
-nodes.value = folderData.value.map((item, index) => {
+const toNode = (item: FolderItem | FileItem): TreeNode => {
     const keyResult = encodeValue(JSON.stringify(item));
 
     if (keyResult.isErr()) {
-        console.error("Error encoding folder key:", keyResult.error);
+        console.error("Error encoding item key:", keyResult.error);
         return {
-            key: "", // Skip this folder if encoding fails
+            key: "", // Skip this item if encoding fails
             label: item.name,
             leaf: true,
             loading: isLoading.value,
-            icon: "pi pi-folder",
+            icon: "pi pi-file",
         };
     }
 
     return {
-        key: keyResult.value,
+        key: keyResult.value, // Use full path as key
         label: item.name,
-        leaf: !item.hasChildren,
+        leaf: "hasChildren" in item ? !item.hasChildren : true,
         loading: isLoading.value,
-        icon: "pi pi-folder"
+        icon: isFolderItem(item) ? "pi pi-folder" : "pi pi-file",
     };
+};
+
+nodes.value = folderData.value.map((item, index) => {
+    return toNode(item);
 });
 
 const onNodeSelect = (node: TreeNode) => {
@@ -79,8 +83,6 @@ const onNodeExpand = async (node: TreeNode) => {
 
         const folderOrFileItem: FolderItem | FileItem = JSON.parse(decodedItemResult.value);
         
-        console.log(`THE PATH: ${folderOrFileItem.path}`);
-
         const foldersUrl = `/api/folders?folderPath=${folderOrFileItem.path}`;
 
         const folders = await $fetch<FolderItem[]>(foldersUrl, {
@@ -105,50 +107,12 @@ const onNodeExpand = async (node: TreeNode) => {
 
         // Add the folders as children of the node
         node.children = folders.map((folder, index) => {
-            const keyResult = encodeValue(JSON.stringify(folder));
-
-            if (keyResult.isErr()) {
-                console.error("Error encoding folder key:", keyResult.error);
-                return {
-                    key: "", // Skip this folder if encoding fails
-                    label: folder.name,
-                    leaf: true,
-                    loading: false,
-                    icon: "pi pi-folder",
-                };
-            }
-
-            return ({
-                key: keyResult.value,
-                label: folder.name,
-                leaf: !folder.hasChildren,
-                loading: false,
-                icon: "pi pi-folder",
-            });
+            return toNode(folder);
         });
 
         // Add the files as children of the node
         node.children = [...node.children, ...files.map((file, index) => {
-            const keyResult = encodeValue(JSON.stringify(file));
-
-            if (keyResult.isErr()) {
-                console.error("Error encoding file key:", keyResult.error);
-                return {
-                    key: "", // Skip this file if encoding fails
-                    label: file.name,
-                    leaf: true,
-                    loading: false,
-                    icon: "pi pi-file",
-                };
-            }
-
-            return ({
-                key: keyResult.value, // Use full path as key
-                label: file.name,
-                leaf: true,
-                loading: false,
-                icon: "pi pi-file",
-            });
+            return toNode(file);
         })];
 
         node.loading = false;
@@ -169,6 +133,10 @@ const handleRefresh = async () => {
     });
 };
 
+const handleOptions = (event: MouseEvent, node: TreeNode) => {
+    console.log(node.label);
+};
+
 </script>
 
 
@@ -177,7 +145,15 @@ const handleRefresh = async () => {
         <div class="flex-auto md:flex md:justify-start md:items-center flex-col">
             <label class="font-bold block mb-2">Icon Mode</label>
             <Tree :value="nodes" loadingMode="icon" class="w-full md:w-[30rem]" selection-mode="single"
-                @node-expand="onNodeExpand" @node-select="onNodeSelect" />
+                @node-expand="onNodeExpand" @node-select="onNodeSelect">
+                <template #default="slotProps">
+                    <div>
+                        <label class="ml-1">{{ slotProps.node.label }}</label>
+                        <Button icon="pi pi-ellipsis-v" variant="text" raised rounded aria-label="Filter" size="small" 
+                            @click="(event: MouseEvent) => handleOptions(event, slotProps.node)"/>
+                    </div>
+                </template>
+            </Tree>
 
             <Button label="Refresh" @click="handleRefresh" />
         </div>

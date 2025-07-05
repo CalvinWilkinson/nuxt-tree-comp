@@ -11,7 +11,6 @@ const currentImgPath = ref<string>("");
 const handleNodeSelected = (selectedItem: FolderItem | FileItem) => {
     if (isFileItem(selectedItem)) {
         currentImgPath.value = selectedItem.url;
-        console.log(currentImgPath.value);
     }
 };
 </script>
