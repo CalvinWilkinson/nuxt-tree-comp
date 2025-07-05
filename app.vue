@@ -4,6 +4,7 @@ import type { FileItem } from "./core/data/file-item";
 import { decodeValue } from "./core/utils/encoding";
 import type { FolderItem } from "./core/data/folder-item";
 import { isFileItem, isFolderItem } from "./core/utils/type-guards";
+import type { MenuItem } from "primevue/menuitem";
 
 const currentImgPath = ref<string>("");
 
@@ -13,6 +14,15 @@ const handleNodeSelected = (selectedItem: FolderItem | FileItem) => {
         currentImgPath.value = selectedItem.url;
     }
 };
+
+const handleOnRename = (item: MenuItem) => {
+    console.log("On Rename Clicked:", item.label);
+};
+
+const handleOnDelete = (item: MenuItem) => {
+    console.log("On Delete Clicked:", item.label);
+};
+
 </script>
 
 <template>

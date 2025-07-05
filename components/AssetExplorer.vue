@@ -29,6 +29,18 @@ const { data: folderData, pending, refresh } = await useLazyFetch<FolderItem[]>(
 // Computed property to transform data into TreeNode format
 let nodes = ref<TreeNode[]>([]);
 
+const getFolderOrFileItem = (node: TreeNode): FolderItem | FileItem => {
+    const decodedKeyResult = decodeValue(node.key);
+
+    if (decodedKeyResult.isErr()) {
+        throw new Error("Failed to decode TreeNode key");
+    }
+
+    const selectedItem: FolderItem | FileItem = JSON.parse(decodedKeyResult.value);
+
+    return selectedItem;
+};
+
 const toNode = (item: FolderItem | FileItem): TreeNode => {
     const keyResult = encodeValue(JSON.stringify(item));
 
@@ -57,14 +69,7 @@ nodes.value = folderData.value.map((item, index) => {
 });
 
 const onNodeSelect = (node: TreeNode) => {
-    const decodedKeyResult = decodeValue(node.key);
-
-    if (decodedKeyResult.isErr()) {
-        console.error("Error decoding node key:", decodedKeyResult.error);
-        return;
-    }
-
-    const selectedItem: FolderItem | FileItem = JSON.parse(decodedKeyResult.value);
+    const selectedItem = getFolderOrFileItem(node);
     
     props.onNodeSelected?.(selectedItem);
 };
@@ -73,15 +78,7 @@ const onNodeExpand = async (node: TreeNode) => {
     if (!node.children) {
         node.loading = true;
 
-        const decodedItemResult = decodeValue(node.key);
-
-        if (decodedItemResult.isErr()) {
-            console.error("Error decoding node key:", decodedItemResult.error);
-            node.loading = false;
-            return;
-        }
-
-        const folderOrFileItem: FolderItem | FileItem = JSON.parse(decodedItemResult.value);
+        const folderOrFileItem = getFolderOrFileItem(node);
         
         const foldersUrl = `/api/folders?folderPath=${folderOrFileItem.path}`;
 
@@ -133,11 +130,8 @@ const handleRefresh = async () => {
     });
 };
 
-const handleOptions = (event: MouseEvent, node: TreeNode) => {
-    console.log(node.label);
-};
-
 </script>
+
 
 
 <template>
@@ -147,11 +141,13 @@ const handleOptions = (event: MouseEvent, node: TreeNode) => {
             <Tree :value="nodes" loadingMode="icon" class="w-full md:w-[30rem]" selection-mode="single"
                 @node-expand="onNodeExpand" @node-select="onNodeSelect">
                 <template #default="slotProps">
-                    <div>
+                    <FolderFileMenu :label="slotProps.node.label ?? 'no-label-set'" :item="getFolderOrFileItem(slotProps.node)"/>
+
+                    <!-- <div>
                         <label class="ml-1">{{ slotProps.node.label }}</label>
                         <Button icon="pi pi-ellipsis-v" variant="text" raised rounded aria-label="Filter" size="small" 
                             @click="(event: MouseEvent) => handleOptions(event, slotProps.node)"/>
-                    </div>
+                    </div> -->
                 </template>
             </Tree>
 
