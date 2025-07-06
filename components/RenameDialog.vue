@@ -6,6 +6,7 @@ import type { FolderItem } from "~/core/data/folder-item";
 
 interface Props {
     file: FolderItem | FileItem;
+    onRenameSuccess?: (oldPath: string, newPath: string) => void;
 }
 
 const props = defineProps<Props>();
@@ -41,12 +42,21 @@ const confirmRename = (event: MouseEvent) => {
             toast.add({ severity: "info", summary: "Confirmed", detail: "File renamed", life: 3000 });
 
             const queryParams = `?oldFilePath=${props.file.path}&newFileName=${newName.value}`;
-
             const url = `/api/file${queryParams}`;
 
             await $fetch(url, {
                 method: "PATCH",
             });
+
+            // Calculate the new path
+            const pathParts = props.file.path.split("/");
+            pathParts[pathParts.length - 1] = newName.value;
+            const newPath = pathParts.join("/");
+
+            // Call the success callback if provided
+            if (props.onRenameSuccess) {
+                props.onRenameSuccess(props.file.path, newPath);
+            }
 
             visible.value = false;
         }

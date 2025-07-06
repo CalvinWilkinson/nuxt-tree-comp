@@ -8,8 +8,8 @@ import type { FileItem } from "~/core/data/file-item";
 
 interface Props {
     label: string,
-
     item: FolderItem | FileItem,
+    onRenameSuccess?: (oldPath: string, newPath: string) => void;
 }
 
 const props = defineProps<Props>();
@@ -63,5 +63,5 @@ const toggle = (event: MouseEvent) => {
         <Menu ref="menu" id="overlay_menu" :model="items" :popup="true" />
     </div>
 
-    <RenameDialog ref="renameDialogRef" :file="props.item" />
+    <RenameDialog ref="renameDialogRef" :file="props.item" :on-rename-success="props.onRenameSuccess" />
 </template>

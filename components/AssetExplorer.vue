@@ -131,6 +131,45 @@ const handleRefresh = async () => {
     });
 };
 
+// Function to refresh a specific node in the tree
+const refreshNode = async (nodeKey: string, oldPath: string, newPath: string) => {
+    // Find the node in the tree by traversing the tree structure
+    const findAndUpdateNode = async (nodes: TreeNode[], targetKey: string): Promise<boolean> => {
+        for (const node of nodes) {
+            if (node.key === targetKey) {
+                try {
+                    // Fetch the updated item data
+                    const updatedItem = await $fetch<FolderItem | FileItem>(`/api/item?itemPath=${newPath}`);
+                    if (updatedItem) {
+                        // Update the node with new data
+                        node.label = updatedItem.name;
+                        const newNodeKey = encodeValue(JSON.stringify(updatedItem));
+                        if (newNodeKey.isOk()) {
+                            node.key = newNodeKey.value;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to refresh node:", error);
+                }
+                return true;
+            }
+            
+            // Recursively search in children
+            if (node.children && await findAndUpdateNode(node.children, targetKey)) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    await findAndUpdateNode(nodes.value, nodeKey);
+};
+
+// Expose the refresh function so it can be called from child components
+defineExpose({
+    refreshNode
+});
+
 </script>
 
 
@@ -143,7 +182,8 @@ const handleRefresh = async () => {
                 @node-expand="onNodeExpand" @node-select="onNodeSelect">
                 <template #default="slotProps">
                     <FolderFileMenu :label="slotProps.node.label ?? 'no-label-set'"
-                        :item="getFolderOrFileItem(slotProps.node)" />
+                        :item="getFolderOrFileItem(slotProps.node)" 
+                        :on-rename-success="(oldPath: string, newPath: string) => refreshNode(slotProps.node.key, oldPath, newPath)" />
 
                     <!-- <div>
                         <label class="ml-1">{{ slotProps.node.label }}</label>
