@@ -42,16 +42,3 @@ const handleDialogOpen = () => {
         <Button label="Show" @click="handleDialogOpen" />
     </div>
 </template>
-
-
-
-
-
-<script setup lang="ts">
-</script>
-
-
-
-<template>
-
-</template>
