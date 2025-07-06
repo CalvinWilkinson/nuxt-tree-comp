@@ -12,7 +12,8 @@ applyTo: '**'
                        Team collaboration will also be a key feature to control different types of functionality and access to assets
                        based on the team member's role.  Other assets such as audio, video, and text files will also be supported.
 - **Project Type**: Nuxt 3 with TypeScript, Vue 3, and Tailwind CSS.
-- **Package Manager**: PNPM.
+- **Package Manager**: PNPM
+- **UI Framework**: PrimeVue
 - **File Structure**:
     ```plaintext
     nuxt-playground/

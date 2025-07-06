@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { RenameDialog } from "#components";
-import { node } from "@primeuix/themes/aura/organizationchart";
 import type { FileObject, FileObjectV2 } from "@supabase/storage-js";
 import type { TreeNode } from "primevue/treenode";
 import { ref, onMounted } from "vue";
@@ -19,6 +18,7 @@ const props = defineProps<Props>();
 
 // const nodes = ref<TreeNode[] | undefined>(undefined);
 const isLoading = ref(false);
+const selectedKeys = ref<Record<string, boolean>>({});
 
 // Direct useLazyFetch call with unique key
 const { data: folderData, pending, refresh } = await useLazyFetch<FolderItem[]>("/api/folders", {
@@ -178,8 +178,13 @@ defineExpose({
     <div class="card flex flex-wrap gap-4">
         <div class="flex-auto md:flex md:justify-start md:items-center flex-col">
             <label class="font-bold block mb-2">Icon Mode</label>
-            <Tree :value="nodes" loadingMode="icon" class="w-full md:w-[30rem]" selection-mode="single"
-                @node-expand="onNodeExpand" @node-select="onNodeSelect">
+            <Tree :value="nodes" 
+                  v-model:selectionKeys="selectedKeys" 
+                  loadingMode="icon" 
+                  class="w-full md:w-[30rem]" 
+                  selection-mode="single"
+                  @node-expand="onNodeExpand" 
+                  @node-select="onNodeSelect">
                 <template #default="slotProps">
                     <FolderFileMenu :label="slotProps.node.label ?? 'no-label-set'"
                         :item="getFolderOrFileItem(slotProps.node)" 
