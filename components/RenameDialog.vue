@@ -1,8 +1,9 @@
 <script setup lang="ts">
 
-import { ref, defineExpose } from "vue";
+import { ref, defineExpose, computed } from "vue";
 import type { FileItem } from "~/core/data/file-item";
 import type { FolderItem } from "~/core/data/folder-item";
+import { isFolderItem } from "~/core/utils/type-guards";
 
 interface Props {
     file: FolderItem | FileItem;
@@ -17,6 +18,11 @@ const isRenameBtnDisabled = ref(true);
 const confirm = useConfirm();
 const toast = useToast();
 
+// Computed property to determine if we're renaming a folder or file
+const itemType = computed(() => {
+    return isFolderItem(props.file) ? "folder" : "file";
+});
+
 // Expose methods to control the dialog's visibility
 defineExpose({
     open: () => {
@@ -28,7 +34,7 @@ const confirmRename = (event: MouseEvent) => {
     confirm.require({
         target: event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined,
         header: "Confirm Rename",
-        message: `Are you sure you want to rename the file from '${props.file.name}' to '${newName.value}'?`,
+        message: `Are you sure you want to rename the ${itemType.value} from '${props.file.name}' to '${newName.value}'?`,
         icon: "pi pi-exclamation-triangle",
         rejectProps: {
             label: "Cancel",
@@ -39,10 +45,10 @@ const confirmRename = (event: MouseEvent) => {
             label: "Rename"
         },
         accept: async () => {
-            toast.add({ severity: "info", summary: "Confirmed", detail: "File renamed", life: 3000 });
+            toast.add({ severity: "info", summary: "Confirmed", detail: `${itemType.value} renamed`, life: 3000 });
 
-            const queryParams = `?oldFilePath=${props.file.path}&newFileName=${newName.value}`;
-            const url = `/api/file${queryParams}`;
+            const queryParams = `?oldPath=${props.file.path}&newName=${newName.value}`;
+            const url = `/api/rename${queryParams}`;
 
             await $fetch(url, {
                 method: "PATCH",
@@ -77,14 +83,14 @@ const handleNameChange = (value: string | undefined) => {
 
 <template>
     <div class="card flex justify-center">
-        <Dialog v-model:visible="visible" modal header="Edit Profile" :style="{ width: '25rem' }">
+        <Dialog v-model:visible="visible" modal header="Rename Item" :style="{ width: '25rem' }">
             <span class="text-surface-500 dark:text-surface-400 block mb-8">
-                Rename <span class="text-blue-500">{{ props.file.name }}</span>
+                Rename {{ itemType }} <span class="text-blue-500">{{ props.file.name }}</span>
             </span>
 
             <div class="flex items-center gap-4 mb-8">
-                <label for="email" class="font-semibold w-24">New Name</label>
-                <InputText id="email" class="flex-auto" autocomplete="off" v-model:model-value="newName" @value-change="handleNameChange"/>
+                <label for="newName" class="font-semibold w-24">New Name</label>
+                <InputText id="newName" class="flex-auto" autocomplete="off" v-model:model-value="newName" @value-change="handleNameChange"/>
             </div>
 
             <div class="flex justify-end gap-2">
